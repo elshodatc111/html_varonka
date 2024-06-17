@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Funnel Charts</title>
+  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <style>
+    .container {
+      max-width: 1600px;
+    }
+
+    .chart-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 500px;
+    }
+
+    .funnel-label {
+      font-size: 14px;
+      font-weight: bold;
+      fill: #333;
+    }
+
+    .funnel-stilt {
+      stroke: #666;
+      stroke-width: 2;
+      stroke-dasharray: 4, 2;
+    }
+
+    .funnel-segment {
+      cursor: pointer;
+      transition: fill 0.2s;
+    }
+
+    .funnel-segment:hover {
+      fill: #ff5733 !important;
+    }
+  </style>
+</head>
+<body>
+  <div class="container mt-5">
+    <div class="row">
+      <div class="col-6">
+        <h2 class="text-center">Funnel Chart 1</h2>
+        <div id="funnelChart1" class="chart-container"></div>
+      </div>
+      <div class="col-6">
+        <h2 class="text-center">Funnel Chart 2</h2>
+        <div id="funnelChart2" class="chart-container"></div>
+      </div>
+    </div>
+  </div>
+  <script src="funnelChart.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+  const data1 = [
+    { stage: 'Stage 1', value: 5000 },
+    { stage: 'Stage 2', value: 4000 },
+    { stage: 'Stage 3', value: 3000 },
+    { stage: 'Stage 4', value: 2000 },
+    { stage: 'Stage 5', value: 1000 }
+  ];
+
+  const data2 = [
+    { stage: 'Stage A', value: 6000 },
+    { stage: 'Stage B', value: 4500 },
+    { stage: 'Stage C', value: 3500 },
+    { stage: 'Stage D', value: 2500 },
+    { stage: 'Stage E', value: 1500 }
+  ];
+
+  const width = 800;
+  const height = 500;
+  const chartWidth = 300;
+  const chartHeight = 300;
+
+  function createFunnelChart(containerId, data) {
+    const svg = d3.select(containerId)
+      .append("svg")
+      .attr("width", width)
+      .attr("height", height);
+
+    const x = d3.scaleLinear()
+      .domain([0, d3.max(data, d => d.value)])
+      .range([0, chartWidth]);
+
+    const y = d3.scaleBand()
+      .domain(data.map(d => d.stage))
+      .range([0, chartHeight])
+      .padding(0.1);
+
+    const colors = d3.scaleOrdinal(d3.schemeCategory10);
+
+    const funnelLayer = svg.append("g")
+      .attr("transform", `translate(${(width - chartWidth) / 2}, ${(height - chartHeight) / 2})`);
+
+    const funnelSegments = funnelLayer.selectAll(".funnel-segment")
+      .data(data)
+      .enter()
+      .append("path")
+      .attr("class", "funnel-segment")
+      .attr("d", (d, i) => {
+        const topWidth = x(d.value);
+        const bottomWidth = i < data.length - 2 ? x(data[i + 1].value) : topWidth;
+        const yPos = y(d.stage);
+        if (i === data.length - 1) {
+          // Rectangular path for the last stage
+          return `
+            M ${(chartWidth - topWidth) / 2} ${yPos}
+            L ${(chartWidth + topWidth) / 2} ${yPos}
+            L ${(chartWidth + topWidth) / 2} ${yPos + y.bandwidth()}
+            L ${(chartWidth - topWidth) / 2} ${yPos + y.bandwidth()}
+            Z
+          `;
+        } else {
+          return `
+            M ${(chartWidth - topWidth) / 2} ${yPos}
+            L ${(chartWidth + topWidth) / 2} ${yPos}
+            L ${(chartWidth + bottomWidth) / 2} ${yPos + y.bandwidth()}
+            L ${(chartWidth - bottomWidth) / 2} ${yPos + y.bandwidth()}
+            Z
+          `;
+        }
+      })
+      .attr("fill", (d, i) => colors(i));
+
+    funnelLayer.selectAll(".funnel-label")
+      .data(data)
+      .enter()
+      .append("text")
+      .attr("class", "funnel-label")
+      .attr("x", chartWidth + 20)
+      .attr("y", d => y(d.stage) + y.bandwidth() / 2)
+      .attr("dy", ".35em")
+      .attr("text-anchor", "start")
+      .text(d => `${d.stage}: ${d.value}`);
+
+    // Add stilts
+    funnelLayer.selectAll(".funnel-stilt")
+      .data(data)
+      .enter()
+      .append("line")
+      .attr("class", "funnel-stilt")
+      .attr("x1", chartWidth + 10)
+      .attr("y1", d => y(d.stage) + y.bandwidth() / 2)
+      .attr("x2", d => (chartWidth + x(d.value)) / 2)
+      .attr("y2", d => y(d.stage) + y.bandwidth() / 2);
+  }
+
+  createFunnelChart("#funnelChart1", data1);
+  createFunnelChart("#funnelChart2", data2);
+});
+
+  </script>
+</body>
+</html>

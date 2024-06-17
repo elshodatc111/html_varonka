@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Funnel Chart</title>
+  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    .container {
+      max-width: 800px;
+    }
+  </style>
+  
+</head>
+<body>
+  <div class="container mt-5">
+    <div class="row">
+      <div class="col-12">
+        <h2 class="text-center">Funnel Chart</h2>
+        <canvas id="funnelChart"></canvas>
+      </div>
+    </div>
+  </div>
+  <script src="path/to/your/funnelChart.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+  const ctx = document.getElementById('funnelChart').getContext('2d');
+
+  const funnelData = {
+    labels: ['Stage 1', 'Stage 2', 'Stage 3', 'Stage 4', 'Stage 5'],
+    datasets: [{
+      label: 'Number of Users',
+      data: [5000, 4000, 3000, 2000, 1000],
+      backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF'],
+      hoverBackgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF']
+    }]
+  };
+
+  const funnelOptions = {
+    plugins: {
+      legend: {
+        display: false
+      },
+      tooltip: {
+        callbacks: {
+          label: function(context) {
+            return context.dataset.label + ': ' + context.raw;
+          }
+        }
+      }
+    },
+    scales: {
+      x: {
+        beginAtZero: true,
+        ticks: {
+          callback: function(value) {
+            return value + '%';
+          }
+        }
+      }
+    },
+    indexAxis: 'y',
+    elements: {
+      bar: {
+        borderWidth: 2,
+      }
+    }
+  };
+
+  new Chart(ctx, {
+    type: 'bar',
+    data: funnelData,
+    options: funnelOptions
+  });
+});
+
+  </script>
+</body>
+</html>

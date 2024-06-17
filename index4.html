@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Funnel Chart</title>
+  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <style>
+    .container {
+      max-width: 800px;
+    }
+  
+    #funnelChart {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 500px;
+    }
+  
+    .funnel-label {
+      font-size: 14px;
+    }
+  </style>
+  
+</head>
+<body>
+  <div class="container mt-5">
+    <div class="row">
+      <div class="col-12">
+        <h2 class="text-center">Funnel Chart</h2>
+        <div id="funnelChart"></div>
+      </div>
+    </div>
+  </div>
+  <script src="path/to/your/funnelChart.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+  const data = [
+    { stage: 'Stage 1', value: 5000 },
+    { stage: 'Stage 2', value: 4000 },
+    { stage: 'Stage 3', value: 3000 },
+    { stage: 'Stage 4', value: 2000 },
+    { stage: 'Stage 5', value: 1000 }
+  ];
+
+  const width = 800;
+  const height = 500;
+  const chartWidth = 300;
+  const chartHeight = 300;
+
+  const svg = d3.select("#funnelChart")
+    .append("svg")
+    .attr("width", width)
+    .attr("height", height);
+
+  const x = d3.scaleLinear()
+    .domain([0, d3.max(data, d => d.value)])
+    .range([0, chartWidth]);
+
+  const y = d3.scaleBand()
+    .domain(data.map(d => d.stage))
+    .range([0, chartHeight])
+    .padding(0.1);
+
+  const colors = d3.scaleOrdinal(d3.schemeCategory10);
+
+  const funnelLayer = svg.append("g")
+    .attr("transform", `translate(${(width - chartWidth) / 2}, ${(height - chartHeight) / 2})`);
+
+  const funnelSegments = funnelLayer.selectAll(".funnel-segment")
+    .data(data)
+    .enter()
+    .append("path")
+    .attr("class", "funnel-segment")
+    .attr("d", (d, i) => {
+      const topWidth = x(d.value);
+      const bottomWidth = i < data.length - 1 ? x(data[i + 1].value) : 0;
+      const yPos = y(d.stage);
+      return `
+        M ${(chartWidth - topWidth) / 2} ${yPos}
+        L ${(chartWidth + topWidth) / 2} ${yPos}
+        L ${(chartWidth + bottomWidth) / 2} ${yPos + y.bandwidth()}
+        L ${(chartWidth - bottomWidth) / 2} ${yPos + y.bandwidth()}
+        Z
+      `;
+    })
+    .attr("fill", (d, i) => colors(i))
+    .on("mouseover", function(event, d) {
+      d3.select(this)
+        .transition()
+        .duration(200)
+        .attr("fill", "#ff5733");
+    })
+    .on("mouseout", function(event, d) {
+      d3.select(this)
+        .transition()
+        .duration(200)
+        .attr("fill", (d, i) => colors(i));
+    });
+
+  funnelLayer.selectAll(".funnel-label")
+    .data(data)
+    .enter()
+    .append("text")
+    .attr("class", "funnel-label")
+    .attr("x", -10)
+    .attr("y", d => y(d.stage) + y.bandwidth() / 2)
+    .attr("dy", ".35em")
+    .attr("text-anchor", "end")
+    .text(d => `${d.stage}: ${d.value}`);
+
+  // Add stilts
+  funnelLayer.selectAll(".funnel-stilt")
+    .data(data)
+    .enter()
+    .append("line")
+    .attr("class", "funnel-stilt")
+    .attr("x1", -10)
+    .attr("y1", d => y(d.stage) + y.bandwidth() / 2)
+    .attr("x2", d => (chartWidth - x(d.value)) / 2)
+    .attr("y2", d => y(d.stage) + y.bandwidth() / 2)
+    .attr("stroke", "#000")
+    .attr("stroke-width", 1);
+});
+
+  </script>
+</body>
+</html>
